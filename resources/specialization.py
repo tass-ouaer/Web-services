@@ -5,6 +5,7 @@ from models import SpecializationModel
 from db import db
 from schemas import SpecializationSchema
 from marshmallow import EXCLUDE
+from flask_jwt_extended import jwt_required
 
 
 blp = Blueprint("specializations", __name__, description="Operations on specializations")
@@ -12,6 +13,7 @@ blp = Blueprint("specializations", __name__, description="Operations on speciali
 
 @blp.route("/specialization/<int:specialization_id>")
 class SpecializationResource(MethodView):
+
     @blp.response(200, SpecializationSchema)
     def get(self, specialization_id):
         specialization = SpecializationModel.query.get(specialization_id)
@@ -19,6 +21,7 @@ class SpecializationResource(MethodView):
             abort(404, message="Specialization not found.")
         return specialization
 
+    @jwt_required()   # requires token
     @blp.response(204, description="Specialization deleted successfully")
     def delete(self, specialization_id):
         specialization = SpecializationModel.query.get(specialization_id)
@@ -27,7 +30,8 @@ class SpecializationResource(MethodView):
         db.session.delete(specialization)
         db.session.commit()
         return {"message": "Specialization deleted."}
-    
+
+    @jwt_required()   #  requires token
     @blp.arguments(SpecializationSchema(partial=True, unknown=EXCLUDE))
     @blp.response(200, SpecializationSchema)
     def put(self, specialization_data, specialization_id):
@@ -42,14 +46,15 @@ class SpecializationResource(MethodView):
 
 @blp.route("/specialization")
 class SpecializationList(MethodView):
+
     @blp.response(200, SpecializationSchema(many=True))
     def get(self):
         return SpecializationModel.query.all()
 
+    @jwt_required()   # requires token
     @blp.arguments(SpecializationSchema)
     @blp.response(201, SpecializationSchema)
     def post(self, specialization_data):
-        # validation handled by schema
         existing = SpecializationModel.query.filter_by(name=specialization_data["name"]).first()
         if existing:
             abort(400, message="Specialization already exists.")
@@ -57,7 +62,5 @@ class SpecializationList(MethodView):
         specialization = SpecializationModel(name=specialization_data["name"])
         db.session.add(specialization)
         db.session.commit()
-        
-    
 
         return specialization

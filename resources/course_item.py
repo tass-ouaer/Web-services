@@ -4,12 +4,15 @@ from models import CourseItemModel
 from db import db
 from schemas import CourseItemSchema
 from marshmallow import EXCLUDE
+from flask_jwt_extended import jwt_required
+
 
 blp = Blueprint("Course_Items", __name__, description="Operations on course_items")
 
 
 @blp.route("/course_item/<int:course_item_id>")
 class CourseItemResource(MethodView):
+
     @blp.response(200, CourseItemSchema)
     def get(self, course_item_id):
         course_item = CourseItemModel.query.get(course_item_id)
@@ -17,6 +20,7 @@ class CourseItemResource(MethodView):
             abort(404, message="Course item not found.")
         return course_item
 
+    @jwt_required()  # requires token
     @blp.response(204, description="Course item deleted successfully")
     def delete(self, course_item_id):
         course_item = CourseItemModel.query.get(course_item_id)
@@ -26,6 +30,7 @@ class CourseItemResource(MethodView):
         db.session.commit()
         return {"message": "Course item deleted."}
 
+    @jwt_required()  # requires token
     @blp.arguments(CourseItemSchema(partial=True, unknown=EXCLUDE))
     @blp.response(200, CourseItemSchema)
     def put(self, course_item_data, course_item_id):
@@ -44,10 +49,12 @@ class CourseItemResource(MethodView):
 
 @blp.route("/course_item")
 class CourseItemList(MethodView):
+
     @blp.response(200, CourseItemSchema(many=True))
     def get(self):
         return CourseItemModel.query.all()
 
+    @jwt_required()  # requires token
     @blp.arguments(CourseItemSchema)
     @blp.response(201, CourseItemSchema)
     def post(self, course_item_data):

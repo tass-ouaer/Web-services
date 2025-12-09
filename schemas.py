@@ -25,3 +25,25 @@ class SpecializationSchema(PlainSpecializationSchema):
     
 #class SpecializationUpdateSchema(Schema):
 #    name = fields.Str(required=True)
+
+# Basic user info (returned in responses)
+class UserSchema(Schema):
+    id = fields.Int(dump_only=True)
+    name = fields.Str()
+    email = fields.Email()
+
+# For registering a new user
+class UserRegisterSchema(Schema):
+    name = fields.Str(required=True)
+    email = fields.Email(required=True)
+    password = fields.Str(required=True, load_only=True)
+
+# For logging in
+class UserLoginSchema(Schema):
+    email = fields.Email(required=True)
+    password = fields.Str(required=True, load_only=True)
+
+# Token returned after login
+class TokenSchema(Schema):
+    access_token = fields.Str()
+    message = fields.Str()
